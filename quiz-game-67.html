@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ôn Tập Lịch Sử Việt Nam</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Crimson+Pro:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --gold: #c9963a; --gold-light: #e8bc6a;
+    --red: #8b1a1a; --red-dark: #5c0f0f;
+    --cream: #f5eed8; --cream-dark: #e8dfc5;
+    --ink: #1a1208; --ink-light: #3d2e10;
+    --correct: #2d6a2d; --wrong: #8b1a1a;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    font-family:'Crimson Pro',Georgia,serif;
+    background:var(--ink);
+    min-height:100vh; display:flex; align-items:center; justify-content:center; padding:20px;
+    background-image:radial-gradient(ellipse at 20% 20%,rgba(201,150,58,.08) 0%,transparent 60%),
+                     radial-gradient(ellipse at 80% 80%,rgba(139,26,26,.12) 0%,transparent 60%);
+  }
+  #app { width:100%; max-width:760px; }
+  .screen { display:none; animation:fadeIn .4s ease; }
+  .screen.active { display:block; }
+  @keyframes fadeIn { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
+
+  .card {
+    background:var(--cream); border-radius:4px; padding:36px 40px;
+    box-shadow:0 4px 32px rgba(26,18,8,.4),inset 0 0 0 1px rgba(201,150,58,.3);
+    position:relative; overflow:hidden;
+  }
+  .card::before { content:''; position:absolute; top:0; left:0; right:0; height:5px;
+    background:linear-gradient(90deg,var(--red-dark),var(--gold),var(--red-dark)); }
+  .card::after { content:''; position:absolute; bottom:0; left:0; right:0; height:3px;
+    background:linear-gradient(90deg,var(--red-dark),var(--gold),var(--red-dark)); }
+
+  /* START */
+  .start-header { text-align:center; margin-bottom:26px; }
+  .badge { display:inline-block; font-size:11px; letter-spacing:3px; text-transform:uppercase;
+    color:var(--gold); border:1px solid var(--gold); padding:4px 14px; margin-bottom:14px; }
+  .start-title { font-family:'Playfair Display',serif; font-size:clamp(24px,5vw,38px);
+    font-weight:900; color:var(--red-dark); line-height:1.15; margin-bottom:8px; }
+  .start-sub { font-size:17px; color:var(--ink-light); font-style:italic; }
+  hr.div { border:none; height:1px; background:linear-gradient(90deg,transparent,var(--gold),transparent); margin:20px 0; }
+
+  .stats-row { display:flex; justify-content:center; gap:40px; margin-bottom:24px; }
+  .stat { text-align:center; }
+  .stat-num { font-family:'Playfair Display',serif; font-size:34px; font-weight:700; color:var(--red); display:block; }
+  .stat-lbl { font-size:12px; letter-spacing:1.5px; text-transform:uppercase; color:var(--ink-light); }
+
+  .mode-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:24px; }
+  .mode-btn { background:white; border:2px solid var(--cream-dark); border-radius:3px;
+    padding:14px 16px; cursor:pointer; text-align:left; transition:all .2s; font-family:'Crimson Pro',serif; }
+  .mode-btn:hover { border-color:var(--gold); background:#fffbf0; }
+  .mode-btn.sel { border-color:var(--red); background:#fff5f5; }
+  .mt { font-size:15px; font-weight:600; color:var(--ink); display:block; }
+  .md { font-size:13px; color:var(--ink-light); font-style:italic; }
+
+  .start-btn { width:100%; background:linear-gradient(135deg,var(--red-dark),var(--red));
+    color:var(--cream); border:none; padding:16px; font-family:'Playfair Display',serif;
+    font-size:17px; font-weight:700; letter-spacing:1px; cursor:pointer; border-radius:3px;
+    transition:all .2s; box-shadow:0 4px 14px rgba(139,26,26,.4); }
+  .start-btn:hover { transform:translateY(-1px); box-shadow:0 6px 20px rgba(139,26,26,.5); }
+
+  /* QUIZ */
+  .qhdr { display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; }
+  .qctr { font-size:13px; letter-spacing:1.5px; text-transform:uppercase; color:var(--ink-light); }
+  .qctr span { color:var(--red); font-weight:700; font-size:16px; }
+  .sbadge { background:var(--ink); color:var(--gold); font-family:'Playfair Display',serif;
+    font-size:15px; padding:4px 14px; border-radius:20px; }
+  .pbar { height:4px; background:var(--cream-dark); border-radius:2px; margin-bottom:20px; overflow:hidden; }
+  .pfill { height:100%; background:linear-gradient(90deg,var(--red),var(--gold)); border-radius:2px; transition:width .5s ease; }
+
+  .qtext { font-family:'Playfair Display',serif; font-size:clamp(14px,2.3vw,17px);
+    font-weight:700; color:var(--ink); line-height:1.6; margin-bottom:18px;
+    padding-bottom:16px; border-bottom:1px solid var(--cream-dark); }
+
+  .opts { display:flex; flex-direction:column; gap:10px; }
+  .opt { background:white; border:2px solid var(--cream-dark); border-radius:3px;
+    padding:12px 16px; cursor:pointer; text-align:left; font-family:'Crimson Pro',serif;
+    font-size:16px; color:var(--ink); display:flex; align-items:flex-start; gap:12px;
+    transition:all .2s; line-height:1.4; }
+  .opt:hover:not(:disabled) { border-color:var(--gold); background:#fffbf0; transform:translateX(3px); }
+  .opt:disabled { cursor:default; }
+  .opt.correct { border-color:var(--correct); background:#f0fff0; color:var(--correct); }
+  .opt.wrong { border-color:var(--wrong); background:#fff0f0; color:var(--wrong); }
+  .opt.reveal { border-color:#bbb; background:#f8f5ec; color:#888; }
+  .olbl { font-family:'Playfair Display',serif; font-weight:700; font-size:15px; min-width:22px; padding-top:1px; }
+
+  .fb { margin-top:14px; padding:12px 16px; border-radius:3px; font-size:15px;
+    font-style:italic; display:none; animation:fadeIn .3s; }
+  .fb.correct { background:#f0fff0; border-left:4px solid var(--correct); color:var(--correct); }
+  .fb.wrong { background:#fff0f0; border-left:4px solid var(--wrong); color:var(--wrong); }
+  .fb.show { display:block; }
+
+  .nxt { width:100%; margin-top:16px; background:var(--ink); color:var(--gold);
+    border:none; padding:14px; font-family:'Playfair Display',serif; font-size:16px;
+    font-weight:700; letter-spacing:1px; cursor:pointer; border-radius:3px; transition:all .2s; display:none; }
+  .nxt.show { display:block; }
+  .nxt:hover { background:#2d1f06; }
+
+  /* RESULTS */
+  .rhdr { text-align:center; margin-bottom:22px; }
+  .ricon { font-size:56px; display:block; margin-bottom:8px; animation:bounce .6s ease; }
+  @keyframes bounce { 0%{transform:scale(.5);opacity:0} 70%{transform:scale(1.1)} 100%{transform:scale(1);opacity:1} }
+  .rtitle { font-family:'Playfair Display',serif; font-size:28px; font-weight:900; color:var(--red-dark); margin-bottom:6px; }
+  .rsub { font-size:16px; color:var(--ink-light); font-style:italic; }
+
+  .sring { width:130px; height:130px; border-radius:50%; border:5px solid var(--cream-dark);
+    margin:0 auto 22px; display:flex; align-items:center; justify-content:center; flex-direction:column;
+    background:white; box-shadow:0 0 0 3px var(--gold),0 4px 16px rgba(201,150,58,.3); }
+  .sbig { font-family:'Playfair Display',serif; font-size:38px; font-weight:900; color:var(--red); line-height:1; }
+  .stot { font-size:13px; color:var(--ink-light); letter-spacing:1px; }
+
+  .rstats { display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; margin-bottom:22px; }
+  .rst { background:white; border:1px solid var(--cream-dark); border-radius:3px; padding:14px 10px; text-align:center; }
+  .rsn { font-family:'Playfair Display',serif; font-size:26px; font-weight:700; display:block; }
+  .rsn.g { color:var(--correct); } .rsn.r { color:var(--wrong); } .rsn.b { color:#1a4a8b; }
+  .rsl { font-size:12px; letter-spacing:1px; text-transform:uppercase; color:var(--ink-light); }
+
+  .rmsg { background:linear-gradient(135deg,#fffbf0,#fff5e0); border:1px solid var(--gold);
+    border-radius:3px; padding:16px 20px; text-align:center; margin-bottom:20px;
+    font-size:17px; color:var(--ink); font-style:italic; }
+
+  .btnrow { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  .btn2 { background:white; border:2px solid var(--cream-dark); color:var(--ink);
+    padding:13px; font-family:'Playfair Display',serif; font-size:15px; font-weight:700;
+    cursor:pointer; border-radius:3px; transition:all .2s; }
+  .btn2:hover { border-color:var(--gold); }
+  .btn1 { background:linear-gradient(135deg,var(--red-dark),var(--red)); color:var(--cream);
+    border:none; padding:13px; font-family:'Playfair Display',serif; font-size:15px;
+    font-weight:700; cursor:pointer; border-radius:3px; transition:all .2s;
+    box-shadow:0 4px 12px rgba(139,26,26,.35); }
+  .btn1:hover { transform:translateY(-1px); }
+
+  /* REVIEW */
+  .ritem { margin-bottom:16px; padding:14px; background:white; border-radius:3px; border:1px solid var(--cream-dark); }
+  .rq { font-family:'Playfair Display',serif; font-size:14px; font-weight:700; color:var(--ink); margin-bottom:8px; line-height:1.5; }
+  .rans { font-size:14px; display:flex; gap:8px; flex-wrap:wrap; }
+  .tag { padding:3px 10px; border-radius:20px; font-size:13px; font-weight:600; }
+  .tag.c { background:#f0fff0; color:var(--correct); border:1px solid var(--correct); }
+  .tag.w { background:#fff0f0; color:var(--wrong); border:1px solid var(--wrong); }
+  .tag.a { background:#fff8e0; color:#7a5000; border:1px solid var(--gold); }
+  .rbk { width:100%; margin-top:18px; background:var(--ink); color:var(--gold);
+    border:none; padding:13px; font-family:'Playfair Display',serif; font-size:16px; font-weight:700; cursor:pointer; border-radius:3px; }
+
+  .opt:focus-visible { outline:2px solid var(--gold); outline-offset:2px; }
+  .rbk { transition:all .2s; }
+  .rbk:hover { background:#2d1f06; }
+
+  @media(max-width:520px){
+    .card{padding:22px 18px;}
+    .mode-grid{grid-template-columns:1fr;}
+    .btnrow{grid-template-columns:1fr;}
+  }
+</style>
+</head>
+<body>
+<div id="app">
+
+<!-- START -->
+<div id="sS" class="screen active">
+  <div class="card">
+    <div class="start-header">
+      <div class="badge">Ôn Tập Lịch Sử</div>
+      <h1 class="start-title">Lịch Sử Việt Nam</h1>
+      <p class="start-sub">Bài 7 · Bài 8 · Bài 9 · Cải Cách Lê Thánh Tông</p>
+    </div>
+    <hr class="div">
+    <div class="stats-row">
+      <div class="stat"><span class="stat-num" id="totalN">67</span><span class="stat-lbl">Câu hỏi</span></div>
+      <div class="stat"><span class="stat-num">4</span><span class="stat-lbl">Chủ đề</span></div>
+      <div class="stat"><span class="stat-num">A–D</span><span class="stat-lbl">Lựa chọn</span></div>
+    </div>
+    <hr class="div">
+    <p style="font-size:13px;color:var(--ink-light);margin-bottom:12px;text-transform:uppercase;letter-spacing:1px;">Chế độ luyện tập</p>
+    <div class="mode-grid">
+      <button class="mode-btn sel" onclick="selMode('all',this)"><span class="mt">📚 Tất cả câu hỏi</span><span class="md">Lần lượt từng câu</span></button>
+      <button class="mode-btn" onclick="selMode('shuffle',this)"><span class="mt">🔀 Trộn ngẫu nhiên</span><span class="md">Thứ tự xáo trộn</span></button>
+      <button class="mode-btn" onclick="selMode('quick',this)"><span class="mt">⚡ 10 câu nhanh</span><span class="md">Ngẫu nhiên 10 câu</span></button>
+      <button class="mode-btn" onclick="selMode('hard',this)"><span class="mt">💀 Ôn câu sai</span><span class="md">Câu đã làm sai</span></button>
+    </div>
+    <button class="start-btn" onclick="startQuiz()">BẮT ĐẦU ÔN TẬP →</button>
+  </div>
+</div>
+
+<!-- QUIZ -->
+<div id="qS" class="screen">
+  <div class="card">
+    <div class="qhdr">
+      <div class="qctr">Câu <span id="qN">1</span> / <span id="qT">67</span></div>
+      <div class="sbadge">🏆 <span id="sc">0</span></div>
+    </div>
+    <div class="pbar"><div class="pfill" id="pf"></div></div>
+    <div class="qtext" id="qt"></div>
+    <div class="opts" id="oc"></div>
+    <div class="fb" id="fbx"></div>
+    <button class="nxt" id="nb" onclick="nextQ()">Câu tiếp theo →</button>
+  </div>
+</div>
+
+<!-- RESULTS -->
+<div id="rS" class="screen">
+  <div class="card">
+    <div class="rhdr">
+      <span class="ricon" id="ri">🏆</span>
+      <h2 class="rtitle" id="rtt">Xuất sắc!</h2>
+      <p class="rsub" id="rsb">Bạn đã hoàn thành bài kiểm tra</p>
+    </div>
+    <div class="sring"><span class="sbig" id="fs">0</span><span class="stot" id="ft">/67</span></div>
+    <div class="rstats">
+      <div class="rst"><span class="rsn g" id="cc">0</span><span class="rsl">Đúng</span></div>
+      <div class="rst"><span class="rsn r" id="wc">0</span><span class="rsl">Sai</span></div>
+      <div class="rst"><span class="rsn b" id="pc">0%</span><span class="rsl">Điểm</span></div>
+    </div>
+    <div class="rmsg" id="rm"></div>
+    <div class="btnrow">
+      <button class="btn2" onclick="reviewAns()">📋 Xem lại đáp án</button>
+      <button class="btn1" onclick="goHome()">🔄 Làm lại</button>
+    </div>
+  </div>
+</div>
+
+<!-- REVIEW -->
+<div id="rvS" class="screen">
+  <div class="card">
+    <h2 style="font-family:'Playfair Display',serif;font-size:22px;color:var(--red-dark);margin-bottom:18px;">📋 Xem lại đáp án</h2>
+    <div id="rvc"></div>
+    <button class="rbk" onclick="showR()">← Quay lại kết quả</button>
+  </div>
+</div>
+
+</div>
+<script>
+const Q=[
+  // --- BÀI 7, 8, 9 (Câu 1–44) ---
+  {q:"Câu 1. Việt Nam là cầu nối giữa Đông Nam Á lục địa và khu vực nào sau đây?",o:["Đông Nam Á hải đảo","Trung Đông","Tây Âu","Đông Bắc Á"],a:0},
+  {q:"Câu 2. Trong kháng chiến chống Tống (1075-1077), nhà Lý đã sử dụng nghệ thuật quân sự nào?",o:["Đánh nhanh, thắng nhanh","Tiên phát chế nhân","Vây thành, diệt viện","Vườn không nhà trống"],a:1},
+  {q:"Câu 3. Nội dung nào KHÔNG phải là truyền thống tốt đẹp từ lịch sử chống giặc ngoại xâm của dân tộc Việt Nam?",o:["Lòng yêu nước tha thiết","Tinh thần đoàn kết keo sơn","Tinh thần hiếu chiến","Trí thông minh sáng tạo"],a:2},
+  {q:"Câu 4. Trong kháng chiến chống Tống (1075-1077), nhà Lý đã sử dụng nghệ thuật quân sự nào (chủ động)?",o:["Đánh nhanh, thắng nhanh","Chủ động tiến công","Vây thành, diệt viện","Vườn không nhà trống"],a:1},
+  {q:"Câu 5. Trong kháng chiến chống quân Xiêm (1785), nghĩa quân Tây Sơn giành thắng lợi nào?",o:["Chiến thắng Rạch Gầm – Xoài Mút","Chiến thắng Ngọc Hồi – Đống Đa","Chiến thắng trên sông Như Nguyệt","Chiến thắng Tây Kết, Hàm Tử"],a:0},
+  {q:"Câu 6. Trong kháng chiến chống quân Thanh (1789), nghĩa quân Tây Sơn giành thắng lợi nào?",o:["Chiến thắng Rạch Gầm – Xoài Mút","Chiến thắng Ngọc Hồi – Đống Đa","Chiến thắng trên sông Như Nguyệt","Chiến thắng Tây Kết, Hàm Tử"],a:1},
+  {q:"Câu 7. Kháng chiến chống quân Minh của nhà Hồ thất bại vì lý do nào?",o:["Giặc đánh bất ngờ nên không kịp chống đỡ","Nhà Hồ có ít tướng tài","Nhà Hồ không đoàn kết được nhân dân","Nội bộ tướng lĩnh bị chia rẽ"],a:2},
+  {q:"Câu 8. Bài học từ ba lần kháng chiến chống Mông – Nguyên (thời Trần) nào có thể vận dụng ngày nay?",o:["Tiến công thần tốc, bất ngờ","Tập trung xây dựng thành lũy kiên cố","Bồi dưỡng sức dân, củng cố khối đoàn kết dân tộc","Chủ động tấn công chặn trước thế mạnh của giặc"],a:2},
+  {q:"Câu 9. Đặc điểm nổi bật và xuyên suốt nhất trong các cuộc chiến tranh bảo vệ Tổ quốc đến trước 1945 là gì?",o:["Chiến thuật \"Vừa đánh vừa đàm\"","Chiến thuật \"Đánh chắc, tiến chắc\"","Chiến thuật \"Đánh nhanh, thắng nhanh\"","Chiến thuật \"Chiến tranh nhân dân\""],a:3},
+  {q:"Câu 10. Chiến tranh bảo vệ Tổ quốc được hiểu là gì?",o:["Quá trình một quốc gia, dân tộc đấu tranh chống mọi kẻ thù xâm lược","Quá trình huy động sức mạnh tổng hợp của đất nước nhằm đánh bại kẻ thù","Quá trình sử dụng tiềm lực đất nước nhằm đánh bại ý đồ lật đổ của kẻ thù","Quá trình một dân tộc nổi dậy chống lại ách thống trị của kẻ xâm lược"],a:0},
+  {q:"Câu 11. Lý Thường Kiệt chọn sông Như Nguyệt làm phòng tuyến vì lý do nào?",o:["Nằm ở ven biển, chặn giặc từ biển vào","Là biên giới tự nhiên ngăn cách Đại Việt và Tống","Chặn ngang con đường bộ tiến vào Thăng Long","Là con đường thủy duy nhất tiến vào Đại Việt"],a:2},
+  {q:"Câu 12. Nguyễn Huệ chọn đoạn sông từ Rạch Gầm đến Xoài Mút quyết chiến với quân Xiêm vì lý do nào?",o:["Là biên giới tự nhiên ngăn cách lãnh thổ Việt – Xiêm","Đoạn sông này chặn ngang mọi con đường tiến vào Thăng Long","Quân Xiêm chỉ tiến theo con đường thủy","Nơi có địa thế hiểm trở, phù hợp bố trí mai phục"],a:3},
+  {q:"Câu 13. Nhân dân Việt Nam đã tiến hành nhiều cuộc khởi nghĩa trong hơn một nghìn năm để chống lại ách đô hộ của ai?",o:["Phong kiến phương Bắc","Thực dân Pháp","Phát xít Nhật","Đế quốc Mỹ"],a:0},
+  {q:"Câu 14. Các cuộc khởi nghĩa thời Bắc thuộc diễn ra trong bối cảnh nào?",o:["Đất nước có độc lập, chủ quyền","Đất nước mất độc lập, tự chủ","Trung Quốc bị Mông Cổ đô hộ","Nhân dân Việt Nam đã bị đồng hóa"],a:1},
+  {q:"Câu 15. Khởi nghĩa Lam Sơn (1418–1427) diễn ra trong bối cảnh nào?",o:["Đại Việt bị nhà Nguyên cai trị","Đại Việt bị nhà Minh đô hộ","Đại Việt bị chia cắt làm hai đàng","Đại Việt có độc lập, chủ quyền"],a:1},
+  {q:"Câu 16. Năm 1771, ba anh em Tây Sơn dựng cờ khởi nghĩa nhằm mục đích gì?",o:["Lật đổ ách cai trị của quân Thanh","Chống lại chính quyền chúa Nguyễn","Lật đổ ách cai trị của quân Minh","Chống lại chính quyền Lê – Trịnh"],a:1},
+  {q:"Câu 17. Khởi nghĩa Lam Sơn (1418–1427) mang tính chất nào?",o:["Chiến tranh giải phóng dân tộc","Cuộc đấu tranh giai cấp quyết liệt","Chiến tranh thống nhất đất nước","Khởi nghĩa tự phát của nông dân"],a:0},
+  {q:"Câu 18. Nguyên nhân thất bại các cuộc khởi nghĩa chống Bắc thuộc (179 TCN – 938) là gì?",o:["Chênh lệch về tương quan lực lượng","Không được sự ủng hộ của nhân dân","Quý tộc người Việt chống đối, đàn áp","Điều kiện thời tiết quá khắc nghiệt"],a:0},
+  {q:"Câu 19. Năm 1786, nghĩa quân Tây Sơn giành được thắng lợi nào?",o:["Lật đổ chính quyền chúa Trịnh ở Đàng Ngoài","Đánh tan hơn 5 vạn quân Xiêm xâm lược","Lật đổ chính quyền chúa Nguyễn ở Đàng Trong","Đánh tan hơn 29 vạn quân Mãn Thanh xâm lược"],a:0},
+  {q:"Câu 20. Năm 1423, Lê Lợi đề nghị tạm hòa với quân Minh vì lý do gì?",o:["Thiếu tướng tài, tinh thần chiến đấu sa sút","Nghĩa quân đánh mãi không thắng","Quân sĩ khiếp sợ trước sức mạnh của giặc","Muốn tranh thủ hòa hoãn để xây dựng lực lượng"],a:3},
+  {q:"Câu 21. Đoạn văn bản về chính sách Đông Hán đề cập chủ yếu đến nội dung nào?",o:["Chính sách bóc lột về kinh tế của nhà Đông Hán","Mâu thuẫn giữa các tầng lớp trong xã hội","Nguyên nhân cuộc khởi nghĩa của Hai Bà Trưng","Nguyên nhân cuộc khởi nghĩa của Bà Triệu"],a:2},
+  {q:"Câu 22. Đóng góp to lớn nào của phong trào Tây Sơn (1771–1802) đối với lịch sử dân tộc?",o:["Lật đổ ách đô hộ tàn bạo của nhà Minh","Thống nhất đất nước hoàn toàn về mặt nhà nước","Đánh tan quân xâm lược, bảo vệ nền độc lập dân tộc","Ngăn chặn được nguy cơ Pháp xâm lược"],a:2},
+  {q:"Câu 23. Nội dung nào KHÔNG phản ánh đúng đóng góp của phong trào Tây Sơn?",o:["Lật đổ các chính quyền phong kiến Nguyễn, Trịnh, Lê","Xóa bỏ tình trạng chia cắt đất nước hơn 250 năm","Đánh bại quân Xiêm, Thanh, bảo vệ độc lập đất nước","Thống nhất đất nước từ ải Nam Quan đến mũi Cà Mau"],a:3},
+  {q:"Câu 24. Nội dung nào KHÔNG phải là bài học từ thắng lợi khởi nghĩa Lam Sơn?",o:["Dựa vào sức mạnh của nhân dân để tiến hành chiến tranh lâu dài","Tránh thế mạnh của giặc, tập trung đánh vào chỗ yếu","Vận dụng lối đánh \"lấy ít địch nhiều, lấy yếu chống mạnh\"","Kết thúc chiến tranh bằng nghị hòa trong thế thắng"],a:1},
+  {q:"Câu 25. Để tăng cường sức mạnh quân sự đối phó với nhà Minh, Hồ Quý Ly đã làm gì?",o:["Cải cách văn hoá, xã hội, giáo dục","Xây dựng toà thành Tây Đô kiên cố","Buộc vua Trần nhường ngôi cho mình","Ban hành chính sách hạn điền, hạn nô"],a:1},
+  {q:"Câu 26. Khởi nghĩa nông dân nào diễn ra chống lại nhà Trần vào nửa sau thế kỉ XIV?",o:["Khởi nghĩa Ngô Bệ (Hải Dương)","Khởi nghĩa Phan Bá Vành (Thái Bình)","Khởi nghĩa Yên Thế (Bắc Giang)","Khởi nghĩa Lam Sơn (Thanh Hoá)"],a:0},
+  {q:"Câu 27. Năm 1400, Hồ Quý Ly buộc vua Trần nhường ngôi và lập ra triều đại nào?",o:["Nhà Lê sơ","Nhà Nguyễn","Nhà Hồ","Nhà Lý"],a:2},
+  {q:"Câu 28. Sau khi lên ngôi lập ra nhà Hồ, Hồ Quý Ly đã tiếp tục làm gì?",o:["Tổ chức kháng chiến chống quân Xiêm","Tổ chức kháng chiến chống quân Thanh","Mở rộng lãnh thổ về phía Nam","Tiến hành cuộc cải cách sâu rộng"],a:3},
+  {q:"Câu 29. Công cuộc cải cách của Hồ Quý Ly KHÔNG bao gồm lĩnh vực nào?",o:["Văn hoá – giáo dục","Chính trị – quân sự","Kinh tế – xã hội","Thể thao – du lịch"],a:3},
+  {q:"Câu 30. Cải cách của Hồ Quý Ly diễn ra trong bối cảnh nào?",o:["Nước Đại Việt lâm vào khủng hoảng trầm trọng","Nhà Trần đang trong giai đoạn phát triển thịnh đạt","Giặc Tống sang xâm lược nước ta lần thứ nhất","Chế độ phong kiến Việt Nam phát triển đỉnh cao"],a:0},
+  {q:"Câu 31. Để hạn chế sở hữu ruộng đất lớn của quý tộc, Hồ Quý Ly đã làm gì?",o:["Cho phát hành tiền giấy","Ban hành chính sách hạn điền","Cải cách chế độ giáo dục","Thống nhất đơn vị đo lường"],a:1},
+  {q:"Câu 32. Việc quy định số lượng gia nô được sở hữu của quý tộc trong cải cách của Hồ Quý Ly gọi là gì?",o:["Phép hạn gia nô","Chính sách hạn điền","Chính sách quân điền","Bình quân gia nô"],a:0},
+  {q:"Câu 33. Xây dựng thành luỹ kiên cố, chế tạo súng thần cơ, đóng thuyền chiến là cải cách về lĩnh vực nào?",o:["Kinh tế","Văn hoá","Quân sự","Xã hội"],a:2},
+  {q:"Câu 34. Hạn chế Phật giáo, chấn chỉnh chế độ thi cử, đề cao chữ Nôm là cải cách về lĩnh vực nào?",o:["Kinh tế, xã hội","Văn hoá, giáo dục","Chính trị, quân sự","Hành chính, pháp luật"],a:1},
+  {q:"Câu 35. Trong cải cách về văn hoá, Hồ Quý Ly khuyến khích và đề cao chữ viết nào?",o:["Chữ Nôm","Chữ Hán","Chữ Latinh","Chữ Quốc ngữ"],a:0},
+  {q:"Câu 36. Nguyên nhân dẫn đến sự suy yếu của nhà Trần ở nửa sau thế kỉ XIV là gì?",o:["Đất nước bị quân Minh xâm lược, đô hộ","Nhà nước không quan tâm sản xuất, quan lại ăn chơi hưởng lạc","Chiến tranh giữa các phe phái quyền lực diễn ra liên miên","Nhà Trần tiến hành nhiều cuộc chiến tranh xâm lược tốn kém"],a:1},
+  {q:"Câu 37. Trong tuyển chọn quan lại, Hồ Quý Ly và nhà Hồ tăng cường điều gì?",o:["Mở các khoa thi","Bổ sung tầng lớp quý tộc","Thải hồi những người già yếu","Bổ sung những người khỏe mạnh"],a:0},
+  {q:"Câu 38. Nội dung nào trong cải cách của Hồ Quý Ly thuộc lĩnh vực kinh tế?",o:["In và phát hành tiền giấy","Đặt thêm các đơn vị hành chính","Ban hành hình luật mới","Thải hồi những binh sĩ già yếu"],a:0},
+  {q:"Câu 39. Công trình kiến trúc cuối thế kỉ XIV bằng đá được UNESCO ghi danh là gì?",o:["Luỹ Trường Dực","Luỹ Bán Bích","Thành Nhà Hồ","Kinh thành Huế"],a:2},
+  {q:"Câu 40. Nội dung nào là cải cách về xã hội của Hồ Quý Ly và triều Hồ?",o:["Sửa đổi nội dung các khoa thi","Ban hành quy chế và hình luật mới","Kiểm soát hộ tịch trên cả nước","Khuyến khích sử dụng chữ Nôm"],a:2},
+  {q:"Câu 41. Nội dung nào KHÔNG phải là cải cách văn hóa – giáo dục của Hồ Quý Ly?",o:["Dịch sách từ chữ Nôm sang chữ Hán","Chấn chỉnh lại chế độ thi cử, mở rộng việc học","Đề cao Nho giáo thực dụng, chống giáo điều","Dùng chữ Nôm để chấn hưng văn hóa dân tộc"],a:0},
+  {q:"Câu 42. Nội dung nào là cải cách quân sự – quốc phòng của Hồ Quý Ly?",o:["Xây dựng phòng tuyến chống giặc trên sông Như Nguyệt","Ban hành quy chế và hình luật mới","Cải tiến vũ khí, chế tạo súng thần cơ, đóng thuyền chiến","Bố trí mai phục và đóng cọc gỗ trên sông Bạch Đằng"],a:2},
+  {q:"Câu 43. Tăng cường kiểm tra giám sát quan lại địa phương là cải cách của Hồ Quý Ly trên lĩnh vực nào?",o:["Tổ chức chính quyền, luật pháp","Quân đội, quốc phòng","Kinh tế, xã hội","Văn hóa, giáo dục"],a:0},
+  {q:"Câu 44. Dưới triều Hồ, tôn giáo nào bị suy giảm vai trò so với các triều đại trước?",o:["Nho giáo và Đạo giáo","Phật giáo và Đạo giáo","Nho giáo và Phật giáo","Phật giáo và Hồi giáo"],a:1},
+
+  // --- CÂU 45–54 (bổ sung) ---
+  {q:"Câu 45. Với cuộc cải cách của Hồ Quý Ly và triều Hồ cuối thế kỉ XIV, đầu thế kỉ XV, hệ tư tưởng nào từng bước trở thành ý thức hệ tư tưởng chủ đạo của xã hội Đại Việt?",o:["Nho giáo","Phật giáo","Đạo giáo","Thiên chúa giáo"],a:0},
+  {q:"Câu 46. Cuộc cải cách của Hồ Quý Ly và triều Hồ đã đưa đến sự xác lập bước đầu của thể chế quân chủ chuyên chế trung ương tập quyền theo đường lối nào?",o:["Nhân trị","Đức trị","Thần trị","Pháp trị"],a:3},
+  {q:"Câu 47. Nội dung nào sau đây không phản ánh đúng kết quả cuộc cải cách của Hồ Quý Ly và triều Hồ cuối thế kỉ XIV đầu thế kỉ XV?",o:["Vai trò, sức mạnh của nhà nước được tăng cường","Đưa đất nước thoát khỏi tình trạng khủng hoảng","Lĩnh vực quân đội, quốc phòng được củng cố","Giúp Đại Việt thoát khỏi nguy cơ bị xâm lược"],a:3},
+  {q:"Câu 48. Cuộc cải cách của vua Lê Thánh Tông được tiến hành trong bối cảnh lịch sử nào sau đây?",o:["Nội bộ triều đình có nhiều mâu thuẫn, biến động","Nền kinh tế sa sút, nạn đói diễn ra thường xuyên","Đất nước đứng trước nguy cơ bị nhà Minh xâm lược","Chế độ phong kiến lâm vào khủng hoảng trầm trọng"],a:0},
+  {q:"Câu 49. Công cuộc cải cách của Lê Thánh Tông được tiến hành trên mọi lĩnh vực, nhưng tập trung chủ yếu vào lĩnh vực nào?",o:["Kinh tế","Giáo dục","Hành chính","Văn hóa"],a:2},
+  {q:"Câu 50. Để quản lý đất nước, vua Lê Thánh Tông đã cho ban hành bộ luật nào sau đây?",o:["Hình thư","Quốc triều hình luật","Hình luật","Hoàng Việt luật lệ"],a:1},
+  {q:"Câu 51. Trong lĩnh vực văn hóa, Lê Thánh Tông đặc biệt đề cao hệ tư tưởng nào?",o:["Phật giáo","Đạo giáo","Nho giáo","Thiên chúa giáo"],a:2},
+  {q:"Câu 52. Ban cấp ruộng đất cho quý tộc, quan lại cao cấp từ nhất phẩm đến tứ phẩm là nội dung chủ yếu của chính sách cải cách nào sau đây của vua Lê Thánh Tông?",o:["Quân điền","Hạn điền","Hạn nô","Lộc điền"],a:0},
+  {q:"Câu 53. Năm 1471, vua Lê Thánh Tông cho lập thêm đạo thừa tuyên thứ 13 có tên gọi là gì?",o:["Hà Nội","Phú Xuân","Quảng Nam","Tây Đô"],a:2},
+  {q:"Câu 54. Trong cuộc cải cách thế kỉ XV, dưới đạo thừa tuyên, vua Lê Thánh Tông thiết lập hệ thống hành chính nào?",o:["Phủ, huyện/châu, xã","Tỉnh/thành phố, huyện, xã","Lộ, trấn, phủ, huyện/châu","Tỉnh, phủ, huyện, làng"],a:0},
+
+  // --- BÀI 10: CẢI CÁCH LÊ THÁNH TÔNG (Câu 55–67) ---
+  {q:"Câu 55. Dưới thời vua Lê Thánh Tông, quan lại được tuyển chọn chủ yếu thông qua cách nào?",o:["Dòng dõi tôn thất","Tiến cử","Giáo dục – khoa cử","Đề cử"],a:2},
+  {q:"Câu 56. Mục đích cải cách của vua Lê Thánh Tông là gì?",o:["Tăng cường quyền lực của hoàng đế và củng cố bộ máy nhà nước","Giải quyết tình trạng khủng hoảng trầm trọng của đất nước","Biến nước ta trở thành cường quốc lớn mạnh hàng đầu khu vực","Tăng cường tiềm lực đất nước chuẩn bị đối phó giặc ngoại xâm"],a:0},
+  {q:"Câu 57. Để tập trung quyền lực vào nhà vua, Lê Thánh Tông đã làm gì?",o:["Bãi bỏ nhiều cơ quan, chức quan cũ","Chú trọng đổi mới giáo dục khoa cử","Ban hành chính sách hạn điền và hạn nô","Coi trọng bảo vệ quyền lợi phụ nữ, trẻ em"],a:0},
+  {q:"Câu 58. Nhận xét về bộ luật \"gồm hơn 700 điều, quy định đầy đủ tội danh và hình phạt\" đề cập đến bộ luật nào?",o:["Hình luật","Hình thư","Quốc triều hình luật","Hoàng Việt luật lệ"],a:2},
+  {q:"Câu 59. Năm 1460, sau khi lên ngôi, vua Lê Thánh Tông đã tiến hành điều gì?",o:["Cuộc cải cách trên nhiều lĩnh vực","Mở cuộc tiến công sang Trung Quốc","Công cuộc thống nhất đất nước","Khuyến khích phát triển ngoại thương"],a:0},
+  {q:"Câu 60. Điểm mới và tiến bộ nào của bộ luật Quốc triều hình luật?",o:["Đề cao quyền tự do, dân chủ của nhân dân","Bảo vệ tuyệt đối quyền và lợi ích của vua","Bảo vệ quyền và lợi ích của quân cấm binh","Bảo vệ quyền lợi và địa vị của người phụ nữ"],a:3},
+  {q:"Câu 61. Chức năng của Lục bộ dưới thời vua Lê Thánh Tông là gì?",o:["Cơ quan giúp việc cho Lục Tự, Lục khoa","Theo dõi, giám sát hoạt động của Lục khoa","Cơ quan cao cấp chủ chốt trong triều đình","Phụ trách hoạt động quân sự của nhà nước"],a:2},
+  {q:"Câu 62. Ý nghĩa cải cách của vua Lê Thánh Tông thế kỉ XV là gì?",o:["Nâng cao tiềm lực quốc gia, đẩy lùi nguy cơ ngoại xâm","Đưa đất nước thoát khỏi tình trạng khủng hoảng","Góp phần ổn định và phát triển kinh tế, văn hóa, xã hội Đại Việt","Hoàn thành thống nhất đất nước về lãnh thổ và hành chính"],a:2},
+  {q:"Câu 63. \"Coi trọng biên soạn quốc sử\" là cải cách của vua Lê Thánh Tông trên lĩnh vực nào?",o:["Quân đội","Văn hóa","Luật pháp","Kinh tế"],a:1},
+  {q:"Câu 64. Trong cải cách, Hồ Quý Ly và vua Lê Thánh Tông đều thực hiện điều gì giống nhau?",o:["Bãi bỏ nhiều cơ quan, chức quan cũ có nhiều quyền lực","Khuyến khích và đề cao sử dụng chữ Nôm trong thi cử","Hạn chế sở hữu ruộng đất quy mô lớn của quý tộc tôn thất","Tăng cường cơ chế giám sát, ràng buộc nhau giữa các cơ quan"],a:0},
+  {q:"Câu 65. Năm 1484, vua Lê Thánh Tông quyết định dựng bia ghi tên Tiến sĩ nhằm mục đích gì?",o:["Tập trung quyền lực vào tay vua và triều đình trung ương","Đề cao Nho học và tôn vinh các bậc trí thức Nho học","Phát huy những phong tục tập quán tốt đẹp của dân tộc","Tăng cường sự ràng buộc lẫn nhau giữa các cơ quan"],a:1},
+  {q:"Câu 66. Để tăng cường sức mạnh quân đội, vua Lê Thánh Tông đã làm gì?",o:["Quy định chặt chẽ kỉ luật quân đội và huấn luyện, tập trận","Thải hồi những binh sĩ già yếu, bổ sung người khỏe mạnh","Tăng cường tuyển quân quy mô lớn ở các địa phương","Cải tiến vũ khí, phòng thủ những nơi hiểm yếu"],a:0},
+  {q:"Câu 67. Điểm mới nào của bộ Quốc triều hình luật?",o:["Gia tăng hình phạt đối với người phạm tội đã đến tuổi trưởng thành","Có sự phân biệt hình phạt đối với người phạm tội nếu tàn tật hoặc còn nhỏ","Đề cao quyền lợi và địa vị của nam giới, quy định về tố tụng","Xóa bỏ hình phạt đối với người phạm tội nếu tàn tật hoặc còn nhỏ"],a:1}
+];
+
+const LB=['A','B','C','D'];
+let mode='all', qs=[], cur=0, score=0, answered=false;
+let wrongList=JSON.parse(localStorage.getItem('wl')||'[]');
+let results=[];
+
+function selMode(m,btn){
+  mode=m;
+  document.querySelectorAll('.mode-btn').forEach(b=>b.classList.remove('sel'));
+  btn.classList.add('sel');
+}
+function shuf(a){const r=[...a];for(let i=r.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[r[i],r[j]]=[r[j],r[i]];}return r;}
+
+function startQuiz(){
+  results=[];score=0;cur=0;
+  if(mode==='all') qs=[...Q];
+  else if(mode==='shuffle') qs=shuf(Q);
+  else if(mode==='quick') qs=shuf(Q).slice(0,10);
+  else if(mode==='hard'){
+    const wq=Q.filter((_,i)=>wrongList.includes(i));
+    if(!wq.length){alert('Chưa có câu sai nào! Hãy làm thử một bài trước nhé 😊');return;}
+    qs=shuf(wq);
+  }
+  document.getElementById('qT').textContent=qs.length;
+  document.getElementById('ft').textContent='/'+qs.length;
+  show('qS');renderQ();
+}
+
+function renderQ(){
+  answered=false;
+  const q=qs[cur];
+  document.getElementById('qN').textContent=cur+1;
+  document.getElementById('sc').textContent=score;
+  document.getElementById('pf').style.width=(((cur+1)/qs.length)*100)+'%';
+  document.getElementById('qt').textContent=q.q;
+  const oc=document.getElementById('oc');oc.innerHTML='';
+  q.o.forEach((opt,i)=>{
+    const b=document.createElement('button');
+    b.className='opt';
+    b.innerHTML=`<span class="olbl">${LB[i]}.</span><span>${opt}</span>`;
+    b.onclick=()=>selAns(i);
+    oc.appendChild(b);
+  });
+  const fb=document.getElementById('fbx');fb.className='fb';fb.textContent='';
+  const nb=document.getElementById('nb');nb.className='nxt';
+  nb.textContent=cur===qs.length-1?'Xem kết quả 🏆':'Câu tiếp theo →';
+}
+
+function selAns(chosen){
+  if(answered)return;answered=true;
+  const q=qs[cur];const correct=q.a;
+  const btns=document.querySelectorAll('.opt');
+  btns.forEach((b,i)=>{
+    b.disabled=true;
+    if(i===correct)b.classList.add('correct');
+    else if(i===chosen&&chosen!==correct)b.classList.add('wrong');
+    else b.classList.add('reveal');
+  });
+  const fb=document.getElementById('fbx');
+  const oi=Q.indexOf(q);
+  if(chosen===correct){
+    score++;fb.className='fb correct show';fb.textContent='✓ Chính xác! Rất tốt!';
+    if(oi!==-1)wrongList=wrongList.filter(x=>x!==oi);
+  } else {
+    fb.className='fb wrong show';fb.textContent=`✗ Sai rồi! Đáp án đúng là: ${LB[correct]}. ${q.o[correct]}`;
+    if(oi!==-1&&!wrongList.includes(oi))wrongList.push(oi);
+  }
+  localStorage.setItem('wl',JSON.stringify(wrongList));
+  results.push({q,chosen,correct});
+  document.getElementById('sc').textContent=score;
+  document.getElementById('nb').classList.add('show');
+}
+
+function nextQ(){cur++;if(cur>=qs.length)showRes();else renderQ();}
+
+function showRes(){
+  document.getElementById('pf').style.width='100%';
+  const tot=qs.length,pct=Math.round((score/tot)*100);
+  document.getElementById('fs').textContent=score;
+  document.getElementById('ft').textContent='/'+tot;
+  document.getElementById('cc').textContent=score;
+  document.getElementById('wc').textContent=tot-score;
+  document.getElementById('pc').textContent=pct+'%';
+  let icon,title,msg;
+  if(pct>=90){icon='🏆';title='Xuất sắc!';msg='Bạn nắm rất vững kiến thức lịch sử. Tiếp tục phát huy!';}
+  else if(pct>=75){icon='🎖️';title='Giỏi lắm!';msg='Kết quả tốt! Ôn thêm những câu chưa chắc để đạt điểm cao hơn.';}
+  else if(pct>=60){icon='📚';title='Khá tốt!';msg='Bạn đã nắm được phần lớn kiến thức. Hãy ôn lại các câu sai nhé!';}
+  else if(pct>=40){icon='✏️';title='Cần cố gắng thêm!';msg='Hãy ôn lại bài và thử lại. Bạn làm được!';}
+  else{icon='📖';title='Hãy ôn tập thêm!';msg='Đừng nản lòng! Đọc lại bài và luyện tập từng phần nhỏ.';}
+  document.getElementById('ri').textContent=icon;
+  document.getElementById('rtt').textContent=title;
+  document.getElementById('rsb').textContent=`Bạn đã hoàn thành ${tot} câu hỏi`;
+  document.getElementById('rm').textContent=msg;
+  show('rS');
+}
+
+function reviewAns(){
+  const c=document.getElementById('rvc');c.innerHTML='';
+  results.forEach(({q,chosen,correct},i)=>{
+    const d=document.createElement('div');d.className='ritem';
+    const ok=chosen===correct;
+    const wrongTag = !ok ? '<span class="tag a">✓ Đáp án: ' + LB[correct] + '. ' + q.o[correct] + '</span>' : '';
+    d.innerHTML = '<div class="rq">' + (i+1) + '. ' + q.q + '</div>'
+      + '<div class="rans">'
+      + '<span class="tag ' + (ok?'c':'w') + '">' + (ok?'✓':'✗') + ' Bạn chọn: ' + LB[chosen] + '. ' + q.o[chosen] + '</span>'
+      + wrongTag
+      + '</div>';
+    c.appendChild(d);
+  });
+  show('rvS');
+}
+
+function showR(){show('rS');}
+function goHome(){show('sS');}
+function show(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');}
+
+document.getElementById('totalN').textContent=Q.length;
+</script>
+</body>
+</html>
